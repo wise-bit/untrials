@@ -1,0 +1,1 @@
+import{a as r,t as o}from"../chunks/disclose-version.DJaHzQSE.js";import"../chunks/legacy.COez2SFz.js";import{n as p}from"../chunks/runtime.CeIUTREG.js";var e=o('<h1>Trials Base</h1> <p>Visit <a href="https://satrajit.ca">satrajit.ca</a> for other cool projects!!!</p>',1);function n(a){var t=e();p(2),r(a,t)}export{n as component};
