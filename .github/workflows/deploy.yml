@@ -1,35 +1,58 @@
-name: Deploy Svelte App to GitHub Pages
+name: Trials Deploy CI
 
 on:
   push:
-    branches: []
+    branches: ['main']
   pull_request:
-    branches: []
-
-  workflow_dispatch:
+    branches: ['main']
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test --if-present
+    
+    - name: Install Dependencies
+      run: npm install
 
-      - name: Install dependencies
-        run: npm install
+    - name: Build Project
+      run: npm run build
 
-      - name: Build the Svelte app
-        run: npm run build
+    - name: Upload artifact to enable deployment
+      uses: actions/upload-artifact@v3
+      with:
+        name: production-files
+        path: ./dist
+    
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: production-files
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
+          github_token: ${{ secrets.TRIALS_CI_CD_TOKEN }}
+          publish_dir: ./dist
