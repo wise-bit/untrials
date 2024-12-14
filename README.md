@@ -1,14 +1,14 @@
 # Trials
 
-Host minimal game shows with your friends! 
+Host minimal game shows with your friends!
 
 Made as a hobby project, this will never be polished for production, but feel free to add your own twist to it if you wish!
 
-### Try out
+### Hosted Live
 
 [trials.satrajit.ca](https://trials.satrajit.ca)
 
-### Self host
+### Self Host
 
 ```bash
 npm run dev
