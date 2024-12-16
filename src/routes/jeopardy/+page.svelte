@@ -65,9 +65,9 @@
     }
   };
 
-  const selectQuestion = (question: Question) => {
+  const selectQuestion = (question: Question, i: number, j: number) => {
     selectedQuestion.set(question);
-    question.visited = true;
+    questions[i][j].visited = true;
     showModal.set(true);
   };
 
@@ -77,19 +77,22 @@
   };
 </script>
 
+<button class="back-button" on:click={() => (location.href = '/')}
+  >{'< back'}</button
+>
+
 {#if !fileContent}
   <div class="container">
-    <button class="back-button" on:click={() => window.history.back()}
-      >{'< back'}</button
-    >
     <h1>welcome to not-jeopardy</h1>
     <p>upload your custom game json</p>
-    <input
-      type="file"
-      id="file-upload"
-      accept=".json"
-      on:change={handleFileUpload}
-    />
+    <div class="upload-container">
+      <input
+        type="file"
+        id="file-upload"
+        accept=".json"
+        on:change={handleFileUpload}
+      />
+    </div>
   </div>
 {/if}
 
@@ -104,13 +107,15 @@
       </div>
       <div class="">
         <div class="jeopardy-col">
-          {#each questions as questionList}
+          {#each questions as questionList, i}
             <div class="jeopardy-row">
-              {#each questionList as question}
+              {#each questionList as question, j}
                 <div
-                  class="jeopardy-cell {question.visited ? 'visited' : ''}"
-                  on:keydown={() => selectQuestion(question)}
-                  on:click={() => selectQuestion(question)}
+                  class="jeopardy-cell jeopardy-question {question.visited
+                    ? 'visited'
+                    : ''}"
+                  on:keydown={() => selectQuestion(question, i, j)}
+                  on:click={() => selectQuestion(question, i, j)}
                   aria-label="Question for {question.points} points"
                   role="button"
                   tabindex="0"
@@ -143,16 +148,18 @@
     >
       {#if $selectedQuestion}
         <h2>{$selectedQuestion.question}</h2>
-        <!-- <button
-          class="answer-box"
-          on:click={() => ($selectedQuestion.answerVisible = true)}
+        {#if $selectedQuestion.showAnswer}
+          <p>{$selectedQuestion.answer}</p>
+        {/if}
+        <button
+          class="reveal-button"
+          on:click={() =>
+            ($selectedQuestion.showAnswer = !$selectedQuestion.showAnswer)}
         >
-          {$selectedQuestion.answerVisible
-            ? $selectedQuestion.answer
-            : 'Reveal Answer'}
-        </button> -->
+          Reveal answer
+        </button>
+        <button class="close-button" on:click={closeModal}>Close</button>
       {/if}
-      <button class="close-button" on:click={closeModal}>Close</button>
     </div>
   </div>
 {/if}
@@ -175,6 +182,16 @@
     padding: 1rem;
   }
 
+  .upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem;
+    padding: 1rem;
+    text-align: center;
+    border: 2px dashed #f8f8f8;
+  }
+
   .back-button {
     position: absolute;
     top: 1rem;
@@ -192,6 +209,11 @@
   .back-button:hover {
     background-color: #54b3d6;
     color: #1a1a1a;
+  }
+
+  button:hover {
+    background-color: #1e1e1e;
+    color: #d1d1d1;
   }
 
   .jeopardy-container {
@@ -238,10 +260,13 @@
     border: 1px solid #bbccd2;
     border-radius: 10px;
     text-align: center;
-    cursor: pointer;
     font-size: 1.5rem;
     font-weight: bold;
     width: 100%;
+  }
+
+  .jeopardy-question {
+    cursor: pointer;
   }
 
   .visited {
@@ -285,9 +310,9 @@
   .answer-box {
     margin-top: 1rem;
     padding: 1rem;
-    background: #333;
-    color: #f9f9f9;
-    border: 2px solid #54b3d6;
+    background: #4b7a4d;
+    color: #fff;
+    border: 2px solid #182b19;
     border-radius: 8px;
     font-size: 1.2rem;
     cursor: pointer;
@@ -299,15 +324,27 @@
     color: #000;
   }
 
-  .close-button {
+  .reveal-button {
     margin-top: 1rem;
     padding: 0.5rem 1rem;
-    background-color: #333;
-    color: #f9f9f9;
+    background-color: #2b8e40;
+    color: #fff;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
+    font-weight: 500;
+  }
+  .close-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #ab4444;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
   }
 
   .close-button:hover {
