@@ -100,9 +100,17 @@
     showModal.set(false);
     selectedQuestion.set(defaultQuestion);
   };
+
+  const goBack = () => {
+    if ($showFinalJeopardy) {
+      showFinalJeopardy.set(false);
+      return;
+    }
+    location.href = '/';
+  }
 </script>
 
-<button class="back-button" on:click={() => (location.href = '/')}
+<button class="back-button" on:click={() => goBack()}
   >{'< back'}</button
 >
 
@@ -125,7 +133,7 @@
   <div class="jeopardy-container">
     <h1>{boardTitle}</h1>
     <div class="jeopardy-board">
-      <div class="jeopardy-row">
+      <div class="jeopardy-col">
         {#each categories as category}
           <div class="jeopardy-cell category">{category}</div>
         {/each}
@@ -299,6 +307,7 @@
     max-width: 1000px;
     width: 90%;
     display: flex;
+    flex-direction: column;
     justify-content: center;
   }
 
