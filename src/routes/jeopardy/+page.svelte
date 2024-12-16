@@ -9,6 +9,10 @@
     showAnswer: boolean;
   }
 
+  interface FinalQuestion extends Question {
+    showQuestion: boolean;
+  }
+
   interface Category {
     [categoryName: string]: Question[];
   }
@@ -30,8 +34,19 @@
     showAnswer: false,
   };
 
+  const finalJeopardyQuestion: FinalQuestion = {
+    points: '',
+    question: '',
+    answer: '',
+    visited: false,
+    showAnswer: false,
+    showQuestion: false,
+  };
+
   const selectedQuestion = writable(defaultQuestion);
+  const finalQuestion = writable(finalJeopardyQuestion);
   const showModal = writable(false);
+  const showFinalJeopardy = writable(false);
 
   const handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -59,6 +74,16 @@
             showAnswer: false,
           }));
         });
+
+        const finalJeopardyLoad: FinalQuestion = {
+          ...data['final-jeopardy-title-dont-change'][0][
+            'default-category-dont-change'
+          ][0],
+          visited: false,
+          showAnswer: false,
+          showQuestion: false,
+        };
+        finalQuestion.set(finalJeopardyLoad);
       };
 
       reader.readAsText(file);
@@ -96,7 +121,7 @@
   </div>
 {/if}
 
-{#if fileContent}
+{#if fileContent && !$showFinalJeopardy}
   <div class="jeopardy-container">
     <h1>{boardTitle}</h1>
     <div class="jeopardy-board">
@@ -127,6 +152,12 @@
           {/each}
         </div>
       </div>
+    </div>
+    <div>
+      <button
+        class="final-jeopardy-button"
+        on:click={() => showFinalJeopardy.set(true)}>final jeopardy</button
+      >
     </div>
   </div>
 {/if}
@@ -160,6 +191,34 @@
         </button>
         <button class="close-button" on:click={closeModal}>Close</button>
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if $showFinalJeopardy}
+  <div class="final-jeopardy jeopardy-container">
+    <h1>final jeopardy</h1>
+    {#if $finalQuestion.showQuestion}
+      <h2>{$finalQuestion.question}</h2>
+    {/if}
+    {#if $finalQuestion.showAnswer}
+      <div>{$finalQuestion.answer}</div>
+    {/if}
+    <div class="final-jeopardy-buttons">
+      <button
+        class="question-reveal-button"
+        on:click={() =>
+          ($finalQuestion.showQuestion = !$finalQuestion.showQuestion)}
+      >
+        Reveal question
+      </button>
+      <button
+        class="reveal-button"
+        on:click={() =>
+          ($finalQuestion.showAnswer = !$finalQuestion.showAnswer)}
+      >
+        Reveal answer
+      </button>
     </div>
   </div>
 {/if}
@@ -211,6 +270,10 @@
     color: #1a1a1a;
   }
 
+  button {
+    font-family: 'Comic Sans MS', 'Arial', sans-serif;
+  }
+
   button:hover {
     background-color: #1e1e1e;
     color: #d1d1d1;
@@ -221,6 +284,11 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+  }
+
+  .final-jeopardy {
+    max-width: 700px;
+    width: 90%;
   }
 
   .jeopardy-board {
@@ -307,21 +375,11 @@
     width: 80%;
   }
 
-  .answer-box {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #4b7a4d;
-    color: #fff;
-    border: 2px solid #182b19;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-
-  .answer-box:hover {
-    background: #54b3d6;
-    color: #000;
+  .final-jeopardy-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
   }
 
   .reveal-button {
@@ -335,10 +393,35 @@
     cursor: pointer;
     font-weight: 500;
   }
+
   .close-button {
     margin-top: 1rem;
     padding: 0.5rem 1rem;
     background-color: #ab4444;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .final-jeopardy-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #335f8d;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .question-reveal-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #335f8d;
     color: #fff;
     border: none;
     border-radius: 8px;
