@@ -1,5 +1,7 @@
 # Untrials
 
+![Vercel](https://vercelbadge.vercel.app/api/wise-bit/trials)
+
 Host minimal game shows with your friends!\
 Made as a hobby project, this will never be polished for production, but feel free to add your own twist to it if you wish!
 
