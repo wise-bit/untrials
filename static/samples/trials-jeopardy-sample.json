@@ -4,8 +4,8 @@
       "category1": [
         {
           "points": "100",
-          "question": "what is the capital of the first ever country ever created from geographic borders on this planet that humans were like woah mountains ?? my puny hands cannot possibly cross that, anything beyond that must be dinosaurs or something, like woah!",
-          "answer": "the answer may shock you so we're gonna keep it a secret from you hehe gotcha till next time bucko"
+          "question": "question1",
+          "answer": "answer1"
         },
         {
           "points": "200",
@@ -150,9 +150,9 @@
     {
       "default-category-dont-change": [
         {
-          "points": "0",
-          "question": "test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test test ",
-          "answer": "answer1"
+          "points": "-1-dont-change",
+          "question": "final question",
+          "answer": "final answer"
         }
       ]
     }

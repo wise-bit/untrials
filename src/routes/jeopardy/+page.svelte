@@ -107,12 +107,20 @@
       return;
     }
     location.href = '/';
+  };
+
+  function downloadSample() {
+    const a = document.createElement('a');
+    a.href = 'samples/trials-jeopardy-sample.json';
+    a.download = 'sample.json';
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 </script>
 
-<button class="back-button" on:click={() => goBack()}
-  >{'< back'}</button
->
+<button class="back-button" on:click={() => goBack()}>{'< back'}</button>
 
 {#if !fileContent}
   <div class="container">
@@ -125,6 +133,11 @@
         accept=".json"
         on:change={handleFileUpload}
       />
+    </div>
+    <div>
+      <button class="download-sample-button" on:click={() => downloadSample()}
+        >download sample</button
+      >
     </div>
   </div>
 {/if}
@@ -186,18 +199,22 @@
       on:keydown|stopPropagation
     >
       {#if $selectedQuestion}
+        <h4>[{$selectedQuestion.points} points]</h4>
+        <br />
         <h2>{$selectedQuestion.question}</h2>
         {#if $selectedQuestion.showAnswer}
           <p>{$selectedQuestion.answer}</p>
         {/if}
-        <button
-          class="reveal-button"
-          on:click={() =>
-            ($selectedQuestion.showAnswer = !$selectedQuestion.showAnswer)}
-        >
-          Reveal answer
-        </button>
-        <button class="close-button" on:click={closeModal}>Close</button>
+        <div class="final-jeopardy-buttons">
+          <button
+            class="reveal-button"
+            on:click={() =>
+              ($selectedQuestion.showAnswer = !$selectedQuestion.showAnswer)}
+          >
+            reveal answer
+          </button>
+          <button class="close-button" on:click={closeModal}>close</button>
+        </div>
       {/if}
     </div>
   </div>
@@ -218,14 +235,14 @@
         on:click={() =>
           ($finalQuestion.showQuestion = !$finalQuestion.showQuestion)}
       >
-        Reveal question
+        reveal question
       </button>
       <button
         class="reveal-button"
         on:click={() =>
           ($finalQuestion.showAnswer = !$finalQuestion.showAnswer)}
       >
-        Reveal answer
+        reveal answer
       </button>
     </div>
   </div>
@@ -257,6 +274,19 @@
     padding: 1rem;
     text-align: center;
     border: 2px dashed #f8f8f8;
+    border-radius: 1rem;
+    margin-top: 3rem;
+  }
+
+  .download-sample-button {
+    padding: 0.5rem 1rem;
+    background-color: #333;
+    color: #f9f9f9;
+    border: none;
+    border-radius: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
   }
 
   .back-button {
@@ -297,6 +327,9 @@
   .final-jeopardy {
     max-width: 700px;
     width: 90%;
+    background: black;
+    border-radius: 2rem;
+    padding: 3rem;
   }
 
   .jeopardy-board {
@@ -379,6 +412,7 @@
     padding: 2rem;
     border-radius: 10px;
     text-align: center;
+    align-items: center;
     color: #f9f9f9;
     max-width: 500px;
     width: 80%;
@@ -388,6 +422,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
     gap: 1rem;
   }
 
