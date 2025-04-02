@@ -111,7 +111,7 @@
 
   function downloadSample() {
     const a = document.createElement('a');
-    a.href = 'samples/trials-jeopardy-sample.json';
+    a.href = 'samples/trials-not-jeopardy-sample.json';
     a.download = 'sample.json';
 
     document.body.appendChild(a);

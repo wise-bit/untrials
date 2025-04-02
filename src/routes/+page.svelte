@@ -5,7 +5,12 @@
     {
       title: 'not jeopardy',
       description: 'a game of not jeopardy',
-      link: '/jeopardy',
+      link: '/not-jeopardy',
+    },
+    {
+      title: 'non-trivial pursuit',
+      description: 'a game of non trivial pursuit',
+      link: '/non-trivial-pursuit',
     },
     {
       title: 'coming soon',
