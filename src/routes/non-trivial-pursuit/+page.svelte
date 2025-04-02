@@ -144,7 +144,7 @@
 
   function downloadSample() {
     const a = document.createElement('a');
-    a.href = 'samples/trials-pursuit-sample.json';
+    a.href = 'samples/trials-non-trivial-pursuit-sample.json';
     a.download = 'sample.json';
 
     document.body.appendChild(a);
@@ -189,21 +189,70 @@
     .map((_, row) =>
       Array(gridSize)
         .fill(null)
-        .map((_, col) => ({
-          row,
-          col,
-          active:
+        .map((_, col) => {
+          const active =
             row === 0 ||
             col === 0 ||
             row === gridSize - 1 ||
-            col === gridSize - 1,
-          categoryIndex: (row * gridSize + col) % 4,
-        })),
+            col === gridSize - 1;
+          return {
+            row,
+            col,
+            active,
+            categoryIndex: -1,
+            index: -1,
+          };
+        }),
     );
+
+  let index = 0;
+  let directions = [
+    [0, 1],
+    [1, 0],
+    [0, -1],
+    [-1, 0],
+  ];
+
+  let row = 0;
+  let col = 0;
+  let dir = 0;
+
+  while (board[row][col].active) {
+    board[row][col].index = index;
+    board[row][col].categoryIndex = index % 4;
+    index++;
+
+    let nextRow = row + directions[dir][0];
+    let nextCol = col + directions[dir][1];
+
+    if (
+      nextRow < 0 ||
+      nextRow >= gridSize ||
+      nextCol < 0 ||
+      nextCol >= gridSize ||
+      !board[nextRow][nextCol].active ||
+      board[nextRow][nextCol].index !== -1
+    ) {
+      dir = (dir + 1) % 4;
+      nextRow = row + directions[dir][0];
+      nextCol = col + directions[dir][1];
+    }
+
+    if (board[nextRow][nextCol].index !== -1) break;
+    row = nextRow;
+    col = nextCol;
+  }
 </script>
 
-<button class="back-button hov-btn" on:click={() => goBack()}>{'< back'}</button
->
+<div class="aux-btns">
+  <button class="back-button hov-btn" on:click={() => goBack()}>
+    {'< back'}
+  </button>
+
+  <button class="back-button hov-btn" on:click={() => downloadSample()}>
+    {'download template'}
+  </button>
+</div>
 
 {#if false}
   <div class="container">
@@ -267,7 +316,9 @@
               <div
                 class={`cell ${cell.active ? 'active' : ''} cat-${cell.categoryIndex}`}
               >
-                {cell.active ? `${cell.categoryIndex}` : ''}
+                {#if cell.active}
+                  <div>{cell.categoryIndex}</div>
+                {/if}
               </div>
             {/each}
           {/each}
@@ -344,11 +395,17 @@
     width: 100vw;
   }
 
-  .back-button {
-    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+  .aux-btns {
     position: absolute;
     top: 32px;
     left: 32px;
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+  }
+
+  .back-button {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
     padding: 8px 16px;
     background-color: #333;
     color: #f9f9f9;
@@ -459,7 +516,6 @@
   .cell.active.cat-0 {
     background-color: #ff8888;
   }
-
 
   .cell.active.cat-1 {
     background-color: #88aeff;
