@@ -3,38 +3,44 @@
   import { onMount } from 'svelte';
 
   interface Question {
-    index: number;
-    points: string;
+    points: number;
     question: string;
-    answer: string;
+    options: string[];
+    answerKey: number;
     visited: boolean;
-    showAnswer: boolean;
   }
 
   interface Category {
     [categoryName: string]: Question[];
   }
 
-  interface JeopardyData {
-    [boardTitle: string]: Category[];
+  interface NonTrivialPursuitData {
+    categories: Category[];
+  }
+
+  interface InputData {
+    title: string;
+    subtitle: string;
+    categories: Category[];
   }
 
   let fileContent: string | null = null;
-  let boardTitle = 'dummy-board';
-  let categories: string[] = [];
-  let questions: Question[][] = [];
+  let boardTitle: string = 'dummy-board';
+  let boardSubtitle: string = 'dummy-subtitle';
+  let triviaData: NonTrivialPursuitData = { categories: [] };
 
   let currentFace = 1;
   let rolling = false;
   let rollInterval: string | number | NodeJS.Timeout | undefined;
 
+  let unansweredMatrix: number[][] = [];
+
   const defaultQuestion: Question = {
-    index: 0,
-    points: '',
+    points: 100,
     question: '',
-    answer: '',
+    options: ['', '', ''],
+    answerKey: 0,
     visited: false,
-    showAnswer: false,
   };
 
   const selectedQuestion = writable(defaultQuestion);
@@ -48,40 +54,80 @@
 
       reader.onload = (e) => {
         fileContent = e.target?.result as string;
-        const data: JeopardyData = JSON.parse(fileContent);
+        const data: InputData = JSON.parse(fileContent);
 
-        boardTitle = Object.keys(data)[0];
+        boardTitle = data.title;
+        boardSubtitle = data.subtitle;
 
-        categories = data[boardTitle].map(
-          (categoryObject) => Object.keys(categoryObject)[0],
+        triviaData = {
+          categories: data.categories.map((categoryObject) =>
+            Object.fromEntries(
+              Object.entries(categoryObject).map(
+                ([categoryName, questions], _categoryIndex) => [
+                  categoryName,
+                  questions.map((question, _questionIndex) => ({
+                    // id: (categoryIndex + 1) * 100 + questionIndex + 1,
+                    points: question.points,
+                    question: question.question,
+                    options: question.options,
+                    answerKey: question.answerKey,
+                    visited: false,
+                  })),
+                ],
+              ),
+            ),
+          ),
+        };
+
+        unansweredMatrix = triviaData.categories.map((category) =>
+          Array.from(
+            { length: category[Object.keys(category)[0]].length },
+            (_, i) => i,
+          ),
         );
-
-        questions = data[boardTitle].map((categoryObject, categoryIndex) => {
-          const categoryName = Object.keys(categoryObject)[0];
-          return categoryObject[categoryName].map(
-            (question, questionIndex) => ({
-              index: categoryIndex * 100 + questionIndex + 1,
-              points: question.points,
-              question: question.question,
-              answer: question.answer,
-              visited: false,
-              showAnswer: false,
-            }),
-          );
-        });
       };
 
       reader.readAsText(file);
     }
   };
 
-  const selectQuestion = (question: Question, i: number, j: number) => {
+  // ----------------------------------
+  // TODO: remove after
+  import jsonFile from './trials-non-trivial-pursuit-sample.json';
+  onMount(() => {
+    const files = [
+      new File([JSON.stringify(jsonFile)], 'dummy.json', {
+        type: 'application/json',
+        lastModified: 0,
+      }),
+    ];
+    const mockEvent = new Event('change', {
+      bubbles: true,
+      cancelable: true,
+    });
+    Object.defineProperty(mockEvent, 'target', {
+      value: {
+        files,
+      },
+    });
+    handleFileUpload(mockEvent);
+  });
+  // ----------------------------------
+
+  const selectQuestion = (
+    question: Question,
+    // categoryIndex: number,
+    // questionIndex: number,
+  ) => {
     selectedQuestion.set(question);
-    questions[i][j].visited = true;
   };
 
   const openModal = () => {
     showModal.set(true);
+
+    // TODO: remove after
+    console.log(triviaData);
+    console.log(unansweredMatrix);
   };
 
   const closeModal = () => {
@@ -90,10 +136,10 @@
   };
 
   const goBack = () => {
-    if (false) {
-      return;
+    const confirmBack = confirm('are you sure you want to go back to home?');
+    if (confirmBack) {
+      location.href = '/';
     }
-    location.href = '/';
   };
 
   function downloadSample() {
@@ -151,11 +197,13 @@
             col === 0 ||
             row === gridSize - 1 ||
             col === gridSize - 1,
+          categoryIndex: (row * gridSize + col) % 4,
         })),
     );
 </script>
 
-<button class="back-button hov-btn" on:click={() => goBack()}>{'< back'}</button>
+<button class="back-button hov-btn" on:click={() => goBack()}>{'< back'}</button
+>
 
 {#if false}
   <div class="container">
@@ -182,7 +230,10 @@
     <div class="board-container">
       <!-- hovering dice -->
       <div class="dice-container">
-        <h1>{boardTitle}</h1>
+        <div>
+          <h1>{boardTitle}</h1>
+          <h2>{boardSubtitle}</h2>
+        </div>
         <div
           class="dice hov-btn"
           aria-label="Roll the dice"
@@ -213,8 +264,10 @@
         <div class="board">
           {#each board as row}
             {#each row as cell}
-              <div class="cell {cell.active ? 'active' : ''}">
-                {cell.active ? `${cell.row},${cell.col}` : ''}
+              <div
+                class={`cell ${cell.active ? 'active' : ''} cat-${cell.categoryIndex}`}
+              >
+                {cell.active ? `${cell.categoryIndex}` : ''}
               </div>
             {/each}
           {/each}
@@ -242,21 +295,26 @@
       on:keydown|stopPropagation
     >
       {#if $selectedQuestion}
-        <h4>[{$selectedQuestion.points} points]</h4>
+        <h4>[ {$selectedQuestion.points} points ]</h4>
         <br />
         <h2>{$selectedQuestion.question}</h2>
-        {#if $selectedQuestion.showAnswer}
+
+        <!-- TODO: update -->
+        <!-- {#if $selectedQuestion.showAnswer}
           <p>{$selectedQuestion.answer}</p>
-        {/if}
+        {/if} -->
+
         <div class="button-set">
-          <button
+          <!-- <button
             class="reveal-button hov-btn"
             on:click={() =>
               ($selectedQuestion.showAnswer = !$selectedQuestion.showAnswer)}
           >
             reveal answer
-          </button>
-          <button class="close-button hov-btn" on:click={closeModal}>close</button>
+          </button> -->
+          <button class="close-button hov-btn" on:click={closeModal}
+            >close</button
+          >
         </div>
       {/if}
     </div>
@@ -289,14 +347,14 @@
   .back-button {
     font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
     position: absolute;
-    top: 2rem;
-    left: 2rem;
-    padding: 0.5rem 1rem;
+    top: 32px;
+    left: 32px;
+    padding: 8px 16px;
     background-color: #333;
     color: #f9f9f9;
     border: none;
     border-radius: 8px;
-    font-size: 1.4rem;
+    font-size: 22px;
     cursor: pointer;
     transition: background-color 0.3s;
   }
@@ -315,7 +373,7 @@
     width: 70%;
     height: 100%;
     background-color: #000;
-    border-right: 10px solid #0a0a0a;
+    border-right: 16px solid #0a0a0a;
   }
   .board-container > * {
     border-right: none;
@@ -326,17 +384,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 32px;
+  }
+
+  .dice-container > h1 {
+    font-size: 24px;
+  }
+
+  .dice-container > h2 {
+    font-size: 24px;
   }
 
   .dice {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 2rem;
-    font-size: 4rem;
+    margin-top: 32px;
+    font-size: 84px;
     border: 4px solid rgb(183, 170, 170);
     border-radius: 4px;
     user-select: none;
@@ -358,30 +424,30 @@
   }
 
   .dice-result {
-    margin-top: 1rem;
-    font-size: 2rem;
+    margin-top: 16px;
+    font-size: 32px;
   }
 
   /* board */
 
   .board {
     display: grid;
-    grid-template-columns: repeat(5, 10rem);
-    grid-template-rows: repeat(5, 10rem);
-    gap: 1rem;
+    grid-template-columns: repeat(5, 160px);
+    grid-template-rows: repeat(5, 160px);
+    gap: 16px;
     margin: 20px auto;
   }
 
   .cell {
-    width: 10rem;
-    height: 10rem;
+    width: 160px;
+    height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
     background-color: #000000;
     border: 2px solid #000000;
-    border-radius: 1rem;
-    font-size: 2rem;
+    border-radius: 16px;
+    font-size: 48px;
   }
 
   .cell.active {
@@ -390,15 +456,32 @@
     font-weight: bold;
   }
 
+  .cell.active.cat-0 {
+    background-color: #ff8888;
+  }
+
+
+  .cell.active.cat-1 {
+    background-color: #88aeff;
+  }
+
+  .cell.active.cat-2 {
+    background-color: #ff88e1;
+  }
+
+  .cell.active.cat-3 {
+    background-color: #ffd988;
+  }
+
   .show-question-btn {
     font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
-    margin-top: 2rem;
-    padding: 0.5rem 1rem;
+    margin-top: 32px;
+    padding: 8px 16px;
     background-color: #64355b;
     color: #fff;
-    border: 0.2rem solid #391f34;
-    border-radius: 0.3rem;
-    font-size: 1.5rem;
+    border: 4px solid #391f34;
+    border-radius: 4px;
+    font-size: 28px;
     cursor: pointer;
     font-weight: 500;
     transition: transform 0.2s;
@@ -410,9 +493,10 @@
     flex: 1;
     flex-basis: 30%;
     width: 30%;
-    background-color: #242e2b;
-    border-left: 10px solid #101212;
-    padding: 2rem;
+    font-size: 24px;
+    background-color: #4e3838;
+    border-left: 16px solid #101212;
+    padding: 32px;
   }
 
   /* modal */
@@ -431,15 +515,15 @@
 
   .modal {
     background: #1a1a1a;
-    padding: 2rem;
-    border: 0.3rem solid white;
-    border-radius: 0.3rem;
+    padding: 32px;
+    border: 4px solid white;
+    border-radius: 4px;
     text-align: center;
     align-items: center;
     color: #f9f9f9;
     max-width: 500px;
     width: 80%;
-    font-size: 2rem;
+    font-size: 32px;
   }
 
   .button-set {
@@ -447,31 +531,18 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
-  }
-
-  .reveal-button {
-    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background-color: #465e4b;
-    color: #fff;
-    border: 0.3rem solid #1b291e;
-    border-radius: 8px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    font-weight: 500;
+    gap: 32px;
   }
 
   .close-button {
     font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
+    margin-top: 16px;
+    padding: 8px 16px;
     background-color: #845454;
     color: #fff;
-    border: 0.3rem solid #463131;
-    border-radius: 8px;
-    font-size: 1.5rem;
+    border: 4px solid #463131;
+    border-radius: 4px;
+    font-size: 24px;
     cursor: pointer;
     font-weight: 500;
   }
