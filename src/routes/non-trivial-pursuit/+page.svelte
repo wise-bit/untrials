@@ -14,6 +14,11 @@
     [categoryName: string]: Question[];
   }
 
+  interface Player {
+    name: string;
+    score: number;
+  }
+
   interface NonTrivialPursuitData {
     categories: Category[];
   }
@@ -25,18 +30,23 @@
   }
 
   let fileContent: string | null = null;
-  let boardTitle: string = 'dummy-board';
-  let boardSubtitle: string = 'dummy-subtitle';
+  let boardTitle: string = 'upload game file !';
+  let boardSubtitle: string = "i'm a subtitle !";
   let triviaData: NonTrivialPursuitData = { categories: [] };
+  let players: Player[] = [];
 
   let currentFace = 1;
   let rolling = false;
   let rollInterval: string | number | NodeJS.Timeout | undefined;
+  let currentBoardPos = -1;
+  let rolledOnce = false;
 
   let unansweredMatrix: number[][] = [];
+  let correctAnswerIndex = -1;
+  let userAnswerIndex = -1;
 
   const defaultQuestion: Question = {
-    points: 100,
+    points: 0,
     question: '',
     options: ['', '', ''],
     answerKey: 0,
@@ -44,7 +54,8 @@
   };
 
   const selectedQuestion = writable(defaultQuestion);
-  const showModal = writable(false);
+  const showQuestionModal = writable(false);
+  const showEditorModal = writable(false);
 
   const handleFileUpload = async (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -85,54 +96,106 @@
             (_, i) => i,
           ),
         );
+
+        currentBoardPos = 0;
       };
 
       reader.readAsText(file);
     }
   };
 
+  $: {
+    if (unansweredMatrix) {
+      console.log('unansweredMatrix changed, reloading component');
+    }
+  }
+
   // ----------------------------------
   // TODO: remove after
-  import jsonFile from './trials-non-trivial-pursuit-sample.json';
-  onMount(() => {
-    const files = [
-      new File([JSON.stringify(jsonFile)], 'dummy.json', {
-        type: 'application/json',
-        lastModified: 0,
-      }),
-    ];
-    const mockEvent = new Event('change', {
-      bubbles: true,
-      cancelable: true,
-    });
-    Object.defineProperty(mockEvent, 'target', {
-      value: {
-        files,
-      },
-    });
-    handleFileUpload(mockEvent);
-  });
+  // import jsonFile from './trials-non-trivial-pursuit-sample.json';
+  // onMount(() => {
+  //   const files = [
+  //     new File([JSON.stringify(jsonFile)], 'dummy.json', {
+  //       type: 'application/json',
+  //       lastModified: 0,
+  //     }),
+  //   ];
+  //   const mockEvent = new Event('change', {
+  //     bubbles: true,
+  //     cancelable: true,
+  //   });
+  //   Object.defineProperty(mockEvent, 'target', {
+  //     value: {
+  //       files,
+  //     },
+  //   });
+  //   handleFileUpload(mockEvent);
+  // });
   // ----------------------------------
 
-  const selectQuestion = (
-    question: Question,
-    // categoryIndex: number,
-    // questionIndex: number,
-  ) => {
+  const selectQuestion = (categoryIndex: number) => {
+    if (categoryIndex == -1) {
+      selectedQuestion.set(defaultQuestion);
+      return;
+    }
+
+    const randomIndex = Math.floor(
+      Math.random() * unansweredMatrix[categoryIndex].length,
+    );
+    const questionIndex = unansweredMatrix[categoryIndex].splice(
+      randomIndex,
+      1,
+    )[0];
+
+    const question =
+      triviaData.categories[categoryIndex][
+        Object.keys(triviaData.categories[categoryIndex])[0]
+      ][questionIndex];
     selectedQuestion.set(question);
   };
 
-  const openModal = () => {
-    showModal.set(true);
+  function checkAnswer(selectedIndex: number) {
+    userAnswerIndex = selectedIndex;
+    correctAnswerIndex = $selectedQuestion.answerKey - 1;
+  }
 
-    // TODO: remove after
-    console.log(triviaData);
-    console.log(unansweredMatrix);
+  function getClassForOption(index: number) {
+    if (userAnswerIndex === -1) return '';
+    if (index === userAnswerIndex) {
+      if (userAnswerIndex === correctAnswerIndex) {
+        return 'correct';
+      } else {
+        return 'incorrect';
+      }
+    } else if (index === correctAnswerIndex) {
+      return 'correct';
+    }
+    return '';
+  }
+
+  const openQuestionModal = () => {
+    selectQuestion(currentBoardPos % unansweredMatrix.length);
+    showQuestionModal.set(true);
+    rolledOnce = false;
   };
 
-  const closeModal = () => {
-    showModal.set(false);
+  const closeQuestionModal = () => {
+    showQuestionModal.set(false);
     selectedQuestion.set(defaultQuestion);
+
+    correctAnswerIndex = -1;
+    userAnswerIndex = -1;
+
+    unansweredMatrix = [...unansweredMatrix];
+  };
+
+  const openEditorModal = () => {
+    showEditorModal.set(true);
+  };
+
+  const closeEditorModal = () => {
+    showEditorModal.set(false);
+    unansweredMatrix = [...unansweredMatrix];
   };
 
   const goBack = () => {
@@ -150,6 +213,21 @@
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  }
+
+  function updateScore(playerIndex: number, change: number) {
+    players[playerIndex].score += change;
+  }
+
+  function addNewPlayer() {
+    const playerNameInput = document.querySelector(
+      '.player-name-input',
+    ) as HTMLInputElement;
+    const newPlayerName = playerNameInput.value;
+    if (newPlayerName) {
+      players = [...players, { name: newPlayerName, score: 0 }];
+      playerNameInput.value = '';
+    }
   }
 
   // dice stuff
@@ -173,14 +251,50 @@
     rolling = false;
 
     currentFace = Math.floor(Math.random() * 6) + 1;
-    console.log(`Rolled: ${currentFace}`);
+    currentBoardPos = nextAvailablePosition(currentBoardPos + currentFace);
+
+    rolledOnce = true;
   };
+
+  function categoryHasQuestionsLeft(categoryIndex: number) {
+    if (categoryIndex == -1) return false;
+    return (
+      unansweredMatrix.length > categoryIndex &&
+      unansweredMatrix[categoryIndex].length > 0
+    );
+  }
+
+  function nextAvailablePosition(categoryIndex: number) {
+    for (let i = 0; i < unansweredMatrix.length; i++) {
+      const next_index = (categoryIndex + i) % 16;
+      if (categoryHasQuestionsLeft(next_index % unansweredMatrix.length)) {
+        return next_index;
+      }
+    }
+    console.log('no available categories');
+    return -1;
+  }
+
+  function questionAvailable(categoryIndex: number, questionIndex: number) {
+    return unansweredMatrix[categoryIndex].indexOf(questionIndex) !== -1;
+  }
+
+  function toggleQuestionStatus(categoryIndex: number, questionIndex: number) {
+    const matrixIndex = unansweredMatrix[categoryIndex].indexOf(questionIndex);
+    if (matrixIndex === -1) {
+      unansweredMatrix[categoryIndex].push(questionIndex);
+    } else {
+      unansweredMatrix[categoryIndex].splice(matrixIndex, 1);
+    }
+    unansweredMatrix = [...unansweredMatrix];
+  }
 
   onMount(() => {
     return () => clearInterval(rollInterval);
   });
 
   // board stuff
+  // TODO: cleanup someday
 
   // Generate a 5x5 grid where only the outer layer is active
   const gridSize = 5;
@@ -249,15 +363,7 @@
     {'< back'}
   </button>
 
-  <button class="back-button hov-btn" on:click={() => downloadSample()}>
-    {'download template'}
-  </button>
-</div>
-
-{#if false}
-  <div class="container">
-    <h1>welcome to non-trivial-pursuit</h1>
-    <p>upload your custom game json</p>
+  <div class="file-buttons-container">
     <div class="upload-container">
       <input
         type="file"
@@ -266,13 +372,22 @@
         on:change={handleFileUpload}
       />
     </div>
-    <div>
-      <button class="download-sample-button" on:click={() => downloadSample()}
-        >download sample</button
-      >
+    <div
+      class="download-sample-button hov-btn"
+      aria-label="download sample"
+      role="button"
+      tabindex="0"
+      on:click={downloadSample}
+      on:keydown={downloadSample}
+    >
+      {'download template'}
     </div>
   </div>
-{/if}
+</div>
+
+<button class="questions-editor hov-btn" on:click={openEditorModal}>
+  {'questions editor'}
+</button>
 
 {#if true}
   <div class="container">
@@ -302,7 +417,11 @@
         </div>
 
         <div>
-          <button class="show-question-btn hov-btn" on:click={openModal}>
+          <button
+            class="show-question-btn hov-btn"
+            on:click={openQuestionModal}
+            disabled={!fileContent || !rolledOnce}
+          >
             show question!
           </button>
         </div>
@@ -314,10 +433,20 @@
           {#each board as row}
             {#each row as cell}
               <div
-                class={`cell ${cell.active ? 'active' : ''} cat-${cell.categoryIndex}`}
+                class={`cell
+                  ${cell.active ? 'active' : ''}
+                  cat-${cell.categoryIndex}
+                  ${!categoryHasQuestionsLeft(cell.categoryIndex) ? 'inactive-cell' : ''}
+                `}
               >
                 {#if cell.active}
-                  <div>{cell.categoryIndex}</div>
+                  <div
+                    class={`cell-number
+                      ${currentBoardPos === cell.index ? 'current-cell' : ''} 
+                    `}
+                  >
+                    {cell.index + 1}
+                  </div>
                 {/if}
               </div>
             {/each}
@@ -326,17 +455,64 @@
       </div>
     </div>
 
-    <div class="score-container">asd</div>
+    <div class="score-container">
+      <div class="category-guide">
+        {#if !fileContent}
+          <div style="font-size: 20px">upload game file to view categories</div>
+        {/if}
+        {#each triviaData.categories as category, categoryIndex}
+          {#each Object.keys(category) as categoryName}
+            <div class="category catname-{categoryIndex}">
+              {categoryIndex + 1}. {categoryName}
+            </div>
+          {/each}
+        {/each}
+      </div>
+      <div class="player-score new-player-box">
+        <input
+          class="player-name-input"
+          type="text"
+          placeholder="player name"
+        />
+        <div>
+          <button class="add-player-btn hov-btn" on:click={addNewPlayer}
+            >add!</button
+          >
+        </div>
+      </div>
+
+      {#if players.length === 0}
+        <div class="no-players-message">no current players...</div>
+      {/if}
+      {#each players as player, i}
+        <div class="player-score">
+          <div>{player.name}</div>
+          <div class="score-holder">
+            <div>{player.score}</div>
+            <div>
+              <button
+                class="score-update-btn"
+                on:click={() => updateScore(i, -50)}>-</button
+              >
+              <button
+                class="score-update-btn"
+                on:click={() => updateScore(i, +50)}>+</button
+              >
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
   </div>
 {/if}
 
-{#if $showModal}
+{#if $showQuestionModal}
   <div
     class="modal-overlay"
     role="button"
     tabindex="0"
-    on:click={closeModal}
-    on:keydown={closeModal}
+    on:click={closeQuestionModal}
+    on:keydown={() => {}}
   >
     <div
       class="modal"
@@ -346,28 +522,84 @@
       on:keydown|stopPropagation
     >
       {#if $selectedQuestion}
-        <h4>[ {$selectedQuestion.points} points ]</h4>
-        <br />
-        <h2>{$selectedQuestion.question}</h2>
+        <div>[ {$selectedQuestion.points} points ]</div>
+        <h4>{$selectedQuestion.question}</h4>
 
-        <!-- TODO: update -->
-        <!-- {#if $selectedQuestion.showAnswer}
-          <p>{$selectedQuestion.answer}</p>
-        {/if} -->
+        <div>
+          {#key userAnswerIndex}
+            {#each $selectedQuestion.options as option, index}
+              <div
+                aria-label="select answer"
+                role="button"
+                tabindex="0"
+                class="option opt-{getClassForOption(index)}"
+                on:click={() => checkAnswer(index)}
+                on:keydown={() => {}}
+              >
+                {option}
+              </div>
+            {/each}
+          {/key}
+        </div>
 
         <div class="button-set">
-          <!-- <button
-            class="reveal-button hov-btn"
-            on:click={() =>
-              ($selectedQuestion.showAnswer = !$selectedQuestion.showAnswer)}
-          >
-            reveal answer
-          </button> -->
-          <button class="close-button hov-btn" on:click={closeModal}
+          <button class="close-button hov-btn" on:click={closeQuestionModal}
             >close</button
           >
         </div>
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if $showEditorModal}
+  <div
+    class="modal-overlay"
+    role="button"
+    tabindex="0"
+    on:click={closeQuestionModal}
+    on:keydown={() => {}}
+  >
+    <div
+      class="modal"
+      role="button"
+      tabindex="0"
+      on:click|stopPropagation
+      on:keydown|stopPropagation
+    >
+      <h4>edit questions</h4>
+
+      {#key unansweredMatrix}
+        {#each triviaData.categories as category, categoryIndex}
+          <div>{Object.keys(category)[0]}</div>
+          <div class="editable-question">
+            {#each Object.values(category)[0] as question, questionIndex}
+              <div
+                class="editable-cell {questionAvailable(
+                  categoryIndex,
+                  questionIndex,
+                )
+                  ? ''
+                  : 'not-available-cell'}"
+                role="button"
+                tabindex="0"
+                on:click={() =>
+                  toggleQuestionStatus(categoryIndex, questionIndex)}
+                on:keydown={() => {}}
+              >
+                {question.question}
+              </div>
+            {/each}
+          </div>
+          <br />
+        {/each}
+      {/key}
+
+      <div class="button-set">
+        <button class="close-button hov-btn" on:click={closeEditorModal}
+          >close</button
+        >
+      </div>
     </div>
   </div>
 {/if}
@@ -401,7 +633,7 @@
     left: 32px;
     display: flex;
     flex-direction: row;
-    gap: 24px;
+    gap: 28px;
   }
 
   .back-button {
@@ -419,6 +651,65 @@
   .back-button:hover {
     background-color: #54b3d6;
     color: #1a1a1a;
+  }
+
+  .file-buttons-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: #3e5e40;
+    padding-inline: 8px 0px;
+    border-radius: 8px;
+  }
+
+  .upload-container > input {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+  }
+
+  input::file-selector-button {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    background-color: #2b3a2c;
+    color: #f9f9f9;
+    border: none;
+    border-radius: 8px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .download-sample-button {
+    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-left: 32px;
+    padding-right: 16px;
+    border-left: 4px solid #eee;
+    height: 100%;
+    cursor: pointer;
+    background-color: #555;
+    border-end-end-radius: 8px;
+    border-start-end-radius: 8px;
+  }
+
+  .questions-editor {
+    position: absolute;
+    bottom: 32px;
+    left: 32px;
+    display: flex;
+    flex-direction: row;
+    gap: 28px;
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    padding: 8px 16px;
+    background-color: #3b4154;
+    color: #f9f9f9;
+    border: none;
+    border-radius: 8px;
+    font-size: 22px;
+    cursor: pointer;
+    transition: background-color 0.3s;
   }
 
   .board-container {
@@ -442,14 +733,6 @@
     flex-direction: column;
     align-items: center;
     margin-bottom: 32px;
-  }
-
-  .dice-container > h1 {
-    font-size: 24px;
-  }
-
-  .dice-container > h2 {
-    font-size: 24px;
   }
 
   .dice {
@@ -513,6 +796,10 @@
     font-weight: bold;
   }
 
+  .cell.active.inactive-cell {
+    background-color: #222 !important;
+  }
+
   .cell.active.cat-0 {
     background-color: #ff8888;
   }
@@ -529,6 +816,34 @@
     background-color: #ffd988;
   }
 
+  .category-guide {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: #000;
+    padding: 16px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 24px;
+  }
+
+  .catname-0 {
+    color: #ff8888;
+  }
+
+  .catname-1 {
+    color: #88aeff;
+  }
+
+  .catname-2 {
+    color: #ff88e1;
+  }
+
+  .catname-3 {
+    color: #ffd988;
+  }
+
   .show-question-btn {
     font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
     margin-top: 32px;
@@ -543,16 +858,96 @@
     transition: transform 0.2s;
   }
 
+  .show-question-btn:disabled {
+    background-color: #333;
+    border-color: #111;
+  }
+
+  .current-cell {
+    border: 8px solid #000;
+    border-radius: 4px;
+    background-color: #fff;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* scores */
 
   .score-container {
     flex: 1;
+    flex-direction: row;
     flex-basis: 30%;
     width: 30%;
     font-size: 24px;
-    background-color: #4e3838;
-    border-left: 16px solid #101212;
+    background-color: #1e1a43;
+    border-left: 16px solid #161426;
     padding: 32px;
+  }
+
+  .player-score {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 36px;
+    padding-inline: 32px;
+    padding-block: 36px;
+    line-height: 18px;
+    border-radius: 8px;
+    background-color: #0b0920;
+  }
+
+  .score-update-btn {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    border: 0px solid #0b0920;
+    width: 32px;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 28px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+  }
+
+  .score-holder {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .add-player-btn {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    border: 0px solid #0b0920;
+    padding-inline: 16px;
+    padding-block: 8px;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 28px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: transform 0.2s;
+  }
+
+  .player-name-input {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    outline: none;
+    background-color: #0b0920;
+    color: #f9f9f9;
+    border: none;
+    border-bottom: 4px solid #fff;
+    padding-block: 4px;
+    font-size: 32px;
+    width: 300px;
+    transition: background-color 0.3s;
+  }
+
+  .new-player-box {
+    margin-bottom: 64px;
   }
 
   /* modal */
@@ -592,7 +987,7 @@
 
   .close-button {
     font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
-    margin-top: 16px;
+    margin-top: 36px;
     padding: 8px 16px;
     background-color: #845454;
     color: #fff;
@@ -601,5 +996,52 @@
     font-size: 24px;
     cursor: pointer;
     font-weight: 500;
+  }
+
+  .option {
+    font-family: 'Pixelify Sans', 'Comic Sans MS', 'Arial', sans-serif;
+    background: #eee;
+    color: #000;
+    margin-top: 16px;
+    padding: 8px 16px;
+    border: 4px solid #000;
+    border-radius: 8px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .opt-correct {
+    background-color: #5ed791;
+  }
+
+  .opt-incorrect {
+    background-color: #db6464;
+  }
+
+  .opt-correct-answer {
+    background-color: #db6464;
+  }
+
+  .editable-question {
+    font-size: 20px;
+    margin-top: 30px;
+  }
+
+  .editable-cell {
+    text-align: start;
+    background-color: #000;
+    cursor: pointer;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .not-available-cell {
+    color: #444 !important;
+  }
+
+  .modal {
+    max-height: 90vh;
+    overflow: scroll;
   }
 </style>

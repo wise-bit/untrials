@@ -1,133 +1,239 @@
 {
-  "title": "Tooling Trials 3",
-  "subtitle": "The Tools Strike Back!",
+  "title": "hello there",
+  "subtitle": "general kenobi !",
   "categories": [
     {
-      "category1": [
+      "History": [
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "The Treaty of Versailles was signed in which year and ended which war?",
+          "options": [
+            "1918, World War I",
+            "1945, World War II",
+            "1865, American Civil War",
+            "1991, Gulf War"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "The Great Fire of London occurred in which year?",
+          "options": [
+            "1666",
+            "1766",
+            "1866",
+            "1966"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "The ancient city of Pompeii was destroyed by the eruption of which volcano?",
+          "options": [
+            "Mount Vesuvius",
+            "Mount St. Helens",
+            "Mount Fuji",
+            "Mount Olympus"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "The shortest war in history was between which two countries?",
+          "options": [
+            "Britain and Zanzibar",
+            "France and Germany",
+            "USA and Mexico",
+            "China and Japan"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "The Rosetta Stone was discovered in which year?",
+          "options": [
+            "1799",
+            "1899",
+            "1999",
+            "2099"
+          ],
           "answerKey": 1
         }
       ]
     },
     {
-      "category1": [
+      "Science": [
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the process by which water moves through a plant, from the roots to the leaves, and is then released into the air as water vapor?",
+          "options": [
+            "Respiration",
+            "Photosynthesis",
+            "Transpiration",
+            "Evaporation"
+          ],
+          "answerKey": 3
+        },
+        {
+          "points": 100,
+          "question": "What is the largest planet in our solar system?",
+          "options": [
+            "Earth",
+            "Saturn",
+            "Jupiter",
+            "Uranus"
+          ],
+          "answerKey": 3
+        },
+        {
+          "points": 100,
+          "question": "What is the process by which an organism's genetic information is passed from one generation to the next?",
+          "options": [
+            "Mitosis",
+            "Meiosis",
+            "Genetics",
+            "Hereditary"
+          ],
+          "answerKey": 2
+        },
+        {
+          "points": 100,
+          "question": "What is the scientific term for the 'building blocks of life'?",
+          "options": [
+            "Cells",
+            "Molecules",
+            "Tissues",
+            "Organs"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the process by which the universe became transparent to light?",
+          "options": [
+            "The Big Bang",
+            "The formation of the first stars and galaxies",
+            "The recombination of electrons and protons",
+            "The cooling of the universe"
+          ],
+          "answerKey": 3
+        }
+      ]
+    },
+    {
+      "Pop Culture": [
+        {
+          "points": 100,
+          "question": "What was the name of the famous sitcom that aired from 1994 to 2004 and starred Jennifer Aniston, Courteney Cox, Lisa Kudrow, Matt LeBlanc, Matthew Perry, and David Schwimmer?",
+          "options": [
+            "Friends",
+            "Seinfeld",
+            "The Big Bang Theory",
+            "How I Met Your Mother"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What was the name of the famous music group that consisted of John, Paul, George, and Ringo?",
+          "options": [
+            "The Beatles",
+            "The Rolling Stones",
+            "The Who",
+            "The Beach Boys"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What was the name of the famous actor who played the role of Luke Skywalker in the original Star Wars trilogy?",
+          "options": [
+            "Mark Hamill",
+            "Harrison Ford",
+            "Carrie Fisher",
+            "Alec Guinness"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What was the name of the famous video game character who was created by Shigeru Miyamoto and first appeared in the arcade game Donkey Kong in 1981?",
+          "options": [
+            "Mario",
+            "Link",
+            "Kirby",
+            "Pikachu"
+          ],
+          "answerKey": 1
+        },
+        {
+          "points": 100,
+          "question": "What was the name of the famous author who wrote the famous book series 'Harry Potter'?",
+          "options": [
+            "J.K. Rowling",
+            "J.R.R. Tolkien",
+            "C.S. Lewis",
+            "Philip Pullman"
+          ],
           "answerKey": 1
         }
       ]
     },
     {
-      "category1": [
+      "Geography": [
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the world's largest desert?",
+          "options": [
+            "The Sahara",
+            "The Gobi",
+            "The Mojave",
+            "The Atacama"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the world's longest mountain range?",
+          "options": [
+            "The Andes",
+            "The Himalayas",
+            "The Rocky Mountains",
+            "The Appalachian Mountains"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the world's largest island?",
+          "options": [
+            "Greenland",
+            "New Guinea",
+            "Borneo",
+            "Iceland"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the world's deepest lake?",
+          "options": [
+            "Lake Baikal",
+            "Lake Tanganyika",
+            "Lake Vostok",
+            "Lake Michigan"
+          ],
           "answerKey": 1
         },
         {
           "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
-          "answerKey": 1
-        }
-      ]
-    },
-    {
-      "category1": [
-        {
-          "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
-          "answerKey": 1
-        },
-        {
-          "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
-          "answerKey": 1
-        },
-        {
-          "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
-          "answerKey": 1
-        },
-        {
-          "points": 100,
-          "question": "question1",
-          "options": ["option1", "option2", "option3"],
+          "question": "What is the world's longest river?",
+          "options": [
+            "The Nile",
+            "The Amazon",
+            "The Yangtze",
+            "The Mississippi"
+          ],
           "answerKey": 1
         }
       ]
