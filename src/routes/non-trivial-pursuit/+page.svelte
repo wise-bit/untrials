@@ -900,7 +900,7 @@
     background-color: #342f60;
     padding-inline: 16px;
     max-height: 60vh;
-    overflow: scroll;
+    overflow: auto;
   }
 
   .player-score {
@@ -1058,6 +1058,6 @@
 
   .modal {
     max-height: 90vh;
-    overflow: scroll;
+    overflow: auto;
   }
 </style>
