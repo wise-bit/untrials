@@ -481,27 +481,30 @@
         </div>
       </div>
 
-      {#if players.length === 0}
-        <div class="no-players-message">no current players...</div>
-      {/if}
-      {#each players as player, i}
-        <div class="player-score">
-          <div>{player.name}</div>
-          <div class="score-holder">
-            <div>{player.score}</div>
-            <div>
-              <button
-                class="score-update-btn"
-                on:click={() => updateScore(i, -50)}>-</button
-              >
-              <button
-                class="score-update-btn"
-                on:click={() => updateScore(i, +50)}>+</button
-              >
+      <div class="player-list-container">
+        {#if players.length === 0}
+          <div class="no-players-message">no current players...</div>
+        {/if}
+
+        {#each players as player, i}
+          <div class="player-score">
+            <div>{player.name}</div>
+            <div class="score-holder">
+              <div>{player.score}</div>
+              <div>
+                <button
+                  class="score-update-btn"
+                  on:click={() => updateScore(i, -50)}>-</button
+                >
+                <button
+                  class="score-update-btn"
+                  on:click={() => updateScore(i, +50)}>+</button
+                >
+              </div>
             </div>
           </div>
-        </div>
-      {/each}
+        {/each}
+      </div>
     </div>
   </div>
 {/if}
@@ -887,12 +890,25 @@
     padding: 32px;
   }
 
+  .no-players-message {
+    padding: 16px;
+  }
+
+  .player-list-container {
+    border: 8px solid #000;
+    border-radius: 8px;
+    background-color: #342f60;
+    padding-inline: 16px;
+    max-height: 60vh;
+    overflow: scroll;
+  }
+
   .player-score {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-block: 20px;
     font-size: 36px;
     padding-inline: 32px;
     padding-block: 36px;
