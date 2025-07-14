@@ -6,7 +6,7 @@
 
 <img width="600px" alt="gameplay: non-trivial pursuit" src="https://github.com/user-attachments/assets/efe29c4f-282a-4b10-b1fb-a8d31539050f" />
 
-_note: Made as a hobby project, this will never be polished for production, but it works and is playable out of the box! Feel free to add your own twists to it if you wish!_
+_note: made as a hobby project, this will never be polished for production, but it works and is playable out of the box! Feel free to add your own twists to it if you wish!_
 
 ## untrials features
 
@@ -22,11 +22,11 @@ _note: Made as a hobby project, this will never be polished for production, but 
 
 ---
 
-### Hosted Live
+## hosted live
 
 [trials.satrajit.ca](https://trials.satrajit.ca)
 
-### Self Host
+### self-host
 
 ```bash
 npm run dev
